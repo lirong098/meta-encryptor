@@ -1,6 +1,6 @@
 {
   "name": "@yeez-tech/meta-encryptor",
-  "version": "2.0.1-alpha.5",
+  "version": "2.0.1",
   "description": "加密数据成Buffer",
   "main": "build/commonjs/index.cjs",
   "module": "build/es/index.js",
