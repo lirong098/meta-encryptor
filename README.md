@@ -4,7 +4,8 @@
 
 #### 介绍
 
-在[典枢](https://doc-dianshu.yeez.tech/index.php)的流程中，用户需要托管数据，供[Fidelius](https://github.com/YeeZTech/YeeZ-Privacy-Computing)解密、计算保证数据的正确性和隐私性，但是，用户不希望暴露源数据。因此，meta-encryptor 就是提供给用户的一款加密源数据的客户端，私钥以及加密源数据的过程仅仅运行在客户端，并不会上传任何网络，以及持久化存储。
+在[典枢](https://doc-dianshu.yeez.tech/index.php)的流程中，用户需要托管数据，供[Fidelius](https://github.com/YeeZTech/YeeZ-Privacy-Computing)解密、计算保证数据的正确性和隐私性，但是，用户不希望暴露源数据。因此，用户需要在本地完成加密，同样的，用户获得数据时，需要在本地进行解密（注意，此处的本地可以是网页，也可以是客户端）。meta-encryptor 就是提供给用户的加解密工具。
+
 
 #### 软件架构
 
@@ -22,6 +23,11 @@ yarn
 
 ```base
 yarn add @yeez-tech/meta-encryptor
+```
+#### 构建及测试
+```base
+yarn install
+yarn test
 ```
 
 #### API
