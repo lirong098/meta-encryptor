@@ -1,0 +1,27 @@
+declare const _default: {
+  downloadJson: (name: string, json: any) => void;
+  dataProvider: any;
+  YPCCrypto: any;
+  YPCNtObject: any;
+  FileProvider: any;
+  DirectDataEncoder: any;
+  Sealer: any;
+  CSVSealer: any;
+  ToString: any;
+  dataHashOfSealedFile: any;
+  signedDataHash: any;
+  forwardSkey: any;
+};
+export const downloadJson: typeof _default.downloadJson;
+export const DataProvider: typeof _default.dataProvider;
+export const YPCCrypto: typeof _default.YPCCrypto;
+export const YPCNtObject: typeof _default.YPCNtObject;
+export const FileProvider: typeof _default.FileProvider;
+export const DirectDataEncoder: typeof _default.DirectDataEncoder;
+export const Sealer: typeof _default.Sealer;
+export const CSVSealer: typeof _default.CSVSealer;
+export const ToString: typeof _default.ToString;
+export const dataHashOfSealedFile: typeof _default.dataHashOfSealedFile;
+export const signedDataHash: typeof _default.signedDataHash;
+export const forwardSkey: typeof _default.forwardSkey;
+export default _default;
