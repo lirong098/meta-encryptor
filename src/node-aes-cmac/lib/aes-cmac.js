@@ -1,8 +1,8 @@
 import { createCipheriv } from "crypto";
 import { bitShiftLeft, xor } from "./buffer-tools.js";
 
-var const_Zero = new Buffer("00000000000000000000000000000000", "hex");
-var const_Rb = new Buffer("00000000000000000000000000000087", "hex");
+var const_Zero = Buffer.from("00000000000000000000000000000000", "hex");
+var const_Rb = Buffer.from("00000000000000000000000000000087", "hex");
 var const_blockSize = 16;
 
 export function generateSubkeys(key) {
@@ -58,7 +58,7 @@ export function aesCmac(key, message) {
     );
   }
 
-  var x = new Buffer("00000000000000000000000000000000", "hex");
+  var x = Buffer.from("00000000000000000000000000000000", "hex");
   var y;
 
   for (var index = 0; index < lastBlockIndex; index++) {
@@ -70,7 +70,7 @@ export function aesCmac(key, message) {
 }
 
 function getMessageBlock(message, blockIndex) {
-  var block = new Buffer(const_blockSize);
+  var block = Buffer.alloc(const_blockSize);
   var start = blockIndex * const_blockSize;
   var end = start + const_blockSize;
 
@@ -80,7 +80,7 @@ function getMessageBlock(message, blockIndex) {
 }
 
 function getPaddedMessageBlock(message, blockIndex) {
-  var block = new Buffer(const_blockSize);
+  var block = Buffer.alloc(const_blockSize);
   var start = blockIndex * const_blockSize;
   var end = message.length;
 

@@ -1,10 +1,20 @@
 import {Sealer, ToString} from "../src/Sealer"
-import {FileProvider} from "../src/FileProvider.js"
+import {Unsealer} from "../src/Unsealer"
+import {SealedFileStream} from "../src/SealedFileStream"
+
 const path = require('path');
 import fs from "fs";
 const crypto = require('crypto');
 const csv = require('csv-parser')
 
+const log = require('loglevel');
+var unsealer_log = require("loglevel").getLogger("meta-encryptor/Unsealer");
+var unsealer_stream_log = require("loglevel").getLogger("meta-encryptor/SealedFileStream");
+
+// 设置日志级别
+//log.setLevel('trace');
+//unsealer_log.setLevel("trace")
+//unsealer_stream_log.setLevel("trace")
 
 function calculateMD5(filePath) {
     return new Promise((resolve, reject) => {
@@ -48,9 +58,18 @@ async function sealAndUnsealFile(src){
   });
   console.timeEnd(tag)
 
-  let unsealer = new FileProvider(key_pair, dst, ret_src);
-  let promise1 = unsealer.unsealFile()
-  await promise1;
+  tag = 'stream unseal ' + src + ' cost time'
+  console.time(tag)
+  let sealedStream = new SealedFileStream(dst);
+  let ret_ws = fs.createWriteStream(ret_src);
+  sealedStream.pipe(new Unsealer({keyPair: key_pair})).pipe(ret_ws);
+  await new Promise((resolve)=>{
+    ret_ws.on('finish', ()=>{
+      resolve();
+    });
+  });
+  console.timeEnd(tag)
+
   let m1 = await calculateMD5(src)
   let m2 = await calculateMD5(ret_src);
   expect(m1.length > 0).toBe(true)
@@ -85,7 +104,7 @@ function generateFileWithSize(fp, size){
       });
   }
 
-  console.log("done generate file")
+  log.info("done generate file")
 }
 
 test('test large file', async()=>{
@@ -100,6 +119,7 @@ test('test large file', async()=>{
    await sealAndUnsealFile(src);
    fs.unlinkSync(src)
 })
+
 
 async function sealAndUnsealCSVFile(src){
   let dst = path.join(path.dirname(src), path.basename(src) + ".sealed");
@@ -117,9 +137,18 @@ async function sealAndUnsealCSVFile(src){
   });
   console.timeEnd(tag)
 
-  let unsealer = new FileProvider(key_pair, dst, ret_src);
-  let promise1 = unsealer.unsealFile()
-  await promise1;
+  let sealedStream = new SealedFileStream(dst);
+  let ret_ws = fs.createWriteStream(ret_src);
+  sealedStream.pipe(new Unsealer({keyPair: key_pair})).pipe(ret_ws);
+  await new Promise((resolve)=>{
+    ret_ws.on('finish', ()=>{
+      resolve();
+    });
+  });
+
+  //let unsealer = new FileProvider(key_pair, dst, ret_src);
+  //let promise1 = unsealer.unsealFile()
+  //await promise1;
   let m1 = await calculateMD5(src)
   let m2 = await calculateMD5(ret_src);
   expect(m1.length > 0).toBe(true)

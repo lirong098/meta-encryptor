@@ -84,7 +84,7 @@ console.log("文件内容=", ypcJson);
 
 
 ##### Sealer
-推荐使用Sealer加密文件，该方法支持多种格式，包括CSV，Excel，下面是对CSV的例子，其中使用了`ToString`将`csv()`产生的对象转换为`Buffer`。
+推荐使用Sealer加密流，该方法支持多种格式，包括CSV，Excel，下面是对CSV的例子，其中使用了`ToString`将`csv()`产生的对象转换为`Buffer`。
 
 ```js
 import {Sealer, ToString} from "@yeez-tech/meta-encryptor"
@@ -97,12 +97,13 @@ rs.pipe(csv())
   .pipe(new Sealer({keyPair:key_pair))
   .pipe(ws);
 ```
-##### FileProvider
-FileProvider用来解密文件，并且将结果输出到文件.
+##### Unsealer
+Unsealer用来解密流，并且将结果输出到流.
 
 ```js
-import {FileProvider} from "@yeez-tech/meta-encryptor";
+import {Sealer, Unsealer, SealedFileStream} from "@yeez-tech/meta-encryptor";
 
+/*
 let src = "./tsconfig.json"
 let dst = "./tsconfig.json.encrypted";
 let rs = fs.createReadStream(src)
@@ -114,8 +115,16 @@ rs.pipe(csv())
 await new Promise(resolve=>{
   ws.on('finish', ()=>resolve());
 });
-let unsealer = new FileProvider(keyPair, dst, "tsconfig.json.ret");
-await unsealer.unsealFile(directDataDecoder);
+*/
+
+let unsealer = new Unsealer({keyPair:key_pair});
+let rrs = new SealedFileStream(dst);
+let wws = fs.createWriteStream(src + ".new")
+
+rrs.pipe(unsealer).pipe(wws);
+await new Promise(resolve=>{
+  wws.on('finish', ()=>resolve());
+})
 
 ```
 
@@ -149,7 +158,7 @@ let r = dataHashOfSealedFile(path);
 ```js
 import {signedDataHash} from "@yeez-tech/meta-encryptor";
 
-//keyPair应该是{'private-key':'hex string of private key', 
+//keyPair应该是{'private-key':'hex string of private key',
 //dataHash应该是一个Buffer，长度为32字节
 let r = signedDataHash(keyPair, dataHash);
 ```
@@ -159,15 +168,16 @@ let r = signedDataHash(keyPair, dataHash);
 ```js
 import {forwardSkey} from "@yeez-tech/meta-encryptor";
 
-//keyPair应该是{'private-key':'hex string of private key', 
+//keyPair应该是{'private-key':'hex string of private key',
 //dianPKey应该是一个Buffer，包含了典公钥，
 //enclaveHash应该是一个Buffer，包含了keyMgr的hash，可以为null，如果为null，则意味着可以被转发到任意的enclave中；
 let r = forwardSkey(keyPair, dianPKey, enclaveHash);
 ```
 返回如下对象，
 ```js
-{encrypted_skey:Buffer,
-forward_sig: Buffer
+{
+  encrypted_skey:Buffer,
+  forward_sig: Buffer
 }
 ```
 

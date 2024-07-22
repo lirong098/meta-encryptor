@@ -1,17 +1,21 @@
 /* eslint-disable */
-import Provider from "./Dataprovider";
+import Provider from "./DataProvider";
 import ypccrypto from "./ypccrypto";
 import YPCNt_Object from './ypcntobject';
-export {
-  FileProvider
-}
-from "./FileProvider.js"
 export {
   Sealer,
   CSVSealer,
   ToString
 }
 from "./Sealer.js"
+
+export {
+  Unsealer
+}from "./Unsealer.js"
+
+export{
+  SealedFileStream
+}from "./SealedFileStream.js"
 
 export {
   isSealedFile,

@@ -4,7 +4,7 @@ import YPCCryptoFun from "./ypccrypto.js";
 const YPCCrypto = YPCCryptoFun();
 import fs from "fs";
 
-let HeaderSize = 64;
+import {BlockNumLimit, MaxItemSize, HeaderSize, MagicNum} from "./limits.js";
 const anyEnclave = Buffer.from(
   "bd0c3cce561fac62b90ddd7bfcfe014702aa4327bc2b0b69ef79a7d2a0350f11",
   "hex"
@@ -19,7 +19,7 @@ const getFileHeader = function(filePath){
 
   const fd = fs.openSync(filePath, 'r');
   const buffer = Buffer.alloc(HeaderSize);
-  let readLen = fs.readSync(fd, buffer, 0, 64, srcStat.size - 64);
+  let readLen = fs.readSync(fd, buffer, 0, HeaderSize, srcStat.size - HeaderSize);
   if(readLen != HeaderSize){
     fs.closeSync(fd);
     return null;

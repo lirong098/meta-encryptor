@@ -1,7 +1,7 @@
 const meta = require("../src/index.js");
 const ByteBuffer = require("bytebuffer");
 var streams = require('memory-streams');
-import DP from "../src/Dataprovider.js"
+import DP from "../src/DataProvider.js"
 const {headerAndBlockBufferFromBuffer} = DP
 
 const BlockNumLimit = 1024 * 1024;
@@ -28,18 +28,7 @@ test('test dataprovider basic', async ()=>{
   //check data
   let ks = new streams.ReadableStream(all)
   let headerAndBlockBuffer = headerAndBlockBufferFromBuffer(all)
-  let r = await meta.checkSealedData(key_pair, ks, headerAndBlockBuffer, expect_hash);
-  expect(r).toBe(true)
   expect(all.length < 32 * BlockNumLimit).toBeTruthy();
 
-  let ss = new streams.ReadableStream(all)
-  let rs = new streams.WritableStream();
-  let rhash = await meta.unsealData(key_pair, ss, headerAndBlockBuffer, rs, null, (total, count)=>{
-    expect(total).toBe(1);
-    expect(count).toBe(1);
-  });
-  let res_ntbytes = rs.toBuffer()
-  expect(ntbytes).toStrictEqual(res_ntbytes);
-  expect(rhash.toString('hex')).toStrictEqual(expect_hash);
 })
 

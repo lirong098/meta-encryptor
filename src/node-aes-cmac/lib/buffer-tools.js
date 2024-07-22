@@ -1,5 +1,5 @@
 export const bitShiftLeft = function (buffer) {
-  var shifted = new Buffer(buffer.length);
+  var shifted = Buffer.alloc(buffer.length);
   var last = buffer.length - 1;
   for (var index = 0; index < last; index++) {
     shifted[index] = buffer[index] << 1;
@@ -13,7 +13,7 @@ export const bitShiftLeft = function (buffer) {
 
 export const xor = function (bufferA, bufferB) {
   var length = Math.min(bufferA.length, bufferB.length);
-  var output = new Buffer(length);
+  var output = Buffer.alloc(length);
   for (var index = 0; index < length; index++) {
     output[index] = bufferA[index] ^ bufferB[index];
   }
