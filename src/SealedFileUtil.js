@@ -34,8 +34,7 @@ export const isSealedFile = function(filePath){
     return false;
   }
 
-  const magic = Buffer.from("1fe2ef7f3ed18847", "hex");
-  if(header.magic_number.equals(magic)){
+  if(header.magic_number.equals(MagicNum)){
     return true;
   }else{
     return false;

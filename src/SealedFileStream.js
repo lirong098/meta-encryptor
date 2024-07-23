@@ -5,7 +5,8 @@ import ByteBuffer, {
   LITTLE_ENDIAN
 } from "bytebuffer";
 const fs = require('fs');
-import{MaxItemSize, HeaderSize, MagicNum} from "./limits.js";
+import{MaxItemSize, HeaderSize, BlockInfoSize,
+  MagicNum, CurrentBlockFileVersion} from "./limits.js";
 import {
   header_t,
   header_t2buffer,
@@ -25,8 +26,11 @@ export class SealedFileStream extends Readable{
     super(options);
     this.filePath = filePath;
     this.isHeaderSent = false;
-    this.startReadPos = 0;
     this.contentSize= 0;
+    this.start = options ? options.start || 0 : 0;
+    this.end = options ? options.end : undefined;
+    this.startReadPos = 0;
+    log.debug("SealedFileStream: ", this)
   }
 
   async _construct(callback) {
@@ -45,16 +49,18 @@ export class SealedFileStream extends Readable{
 
           const header = buffer2header_t(ByteBuffer.wrap(this.header, LITTLE_ENDIAN));
 
-          if (header.version_number != 2) {
-            throw new Error("only support version 2, yet got ", header.version_number);
+          if (header.version_number != CurrentBlockFileVersion) {
+            throw new Error("only support version ", CurrentBlockFileVersion, ", yet got ", header.version_number);
           }
           if(!header.magic_number.equals(MagicNum)){
             throw new Error("Invalid magic number, maybe wrong file");
           }
-          this.contentSize = fileStats.size - HeaderSize - 32 * header.block_number;
+          this.contentSize = fileStats.size - HeaderSize - BlockInfoSize * header.block_number;
           if(this.contentSize <= 0){
             throw new Error("Invalid file size.");
           }
+          let endPosition = this.end !== undefined ? this.end : this.contentSize;
+          this.end = Math.min(endPosition, this.contentSize);
           resolve();
         });
       }) ;
@@ -71,40 +77,44 @@ export class SealedFileStream extends Readable{
         this.push(this.header.slice(this.startReadPos, this.startReadPos + size));
         this.startReadPos += size;
         if(this.startReadPos == HeaderSize){
-          this.startReadPos = 0;
+          this.startReadPos = this.start;
           this.isHeaderSent = true;
         }
       }else{
         this.push(this.header);
-        this.startReadPos = 0;
+        this.startReadPos = this.start;
         this.isHeaderSent = true;
       }
     }else{
       const buffer = Buffer.alloc(size);
+      log.debug("read file from ", this.startReadPos);
       this.fileHandle.read(buffer, 0, size, this.startReadPos)
         .then(({ bytesRead }) => {
           if (bytesRead > 0) {
             log.debug("read data " + bytesRead + ", " + this.contentSize + ", " + this.startReadPos);
             let reachEnd = false;
-            if(this.contentSize - this.startReadPos <= bytesRead){
-              bytesRead = this.contentSize - this.startReadPos;
+            if(this.end - this.startReadPos <= bytesRead){
+              bytesRead = this.end - this.startReadPos;
               reachEnd = true;
+              log.debug("reach end");
             }
 
             log.debug("push data " + bytesRead);
             this.startReadPos += bytesRead;
             this.push(buffer.slice(0, bytesRead));
             if(reachEnd){
+              log.debug("reach end done");
               this.push(null);
             }
         } else {
-          if(this.startReadPos != this.contentSize){
+          if(this.startReadPos != this.end){
             throw new Error("Does't reach end, yet cannot read more data");
           }
           this.push(null);
         }
       })
       .catch(err => {
+        log.error("err: ", err)
         this.destroy(err);
       });
     }

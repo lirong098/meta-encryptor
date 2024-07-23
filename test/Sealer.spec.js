@@ -10,37 +10,13 @@ const csv = require('csv-parser')
 const log = require('loglevel');
 var unsealer_log = require("loglevel").getLogger("meta-encryptor/Unsealer");
 var unsealer_stream_log = require("loglevel").getLogger("meta-encryptor/SealedFileStream");
+import{calculateMD5, key_pair, generateFileWithSize} from "./helper"
 
 // 设置日志级别
 //log.setLevel('trace');
 //unsealer_log.setLevel("trace")
 //unsealer_stream_log.setLevel("trace")
 
-function calculateMD5(filePath) {
-    return new Promise((resolve, reject) => {
-        const stream = fs.createReadStream(filePath);
-        const hash = crypto.createHash('md5');
-
-        stream.on('data', chunk => {
-            hash.update(chunk, 'utf8');
-        });
-
-        stream.on('error', err => {
-            reject(err);
-        });
-
-        stream.on('end', () => {
-            const md5 = hash.digest('hex');
-            resolve(md5);
-        });
-    });
-}
-let key_pair = {
-    private_key:
-      "60d61a1d92b26608016dba8cb8e8e96fd44d5dee0a0415a024657e47febcced8",
-    public_key:
-      "731234931a081e9beae856318a9bf32ac3698ea8215bf74f517f8377cc6ba8740e28ed87c97d0ee8775bc83505867b0bc34a66adc91f0ea9b44c80533f1a3dca",
-};
 
 async function sealAndUnsealFile(src){
   let dst = path.join(path.dirname(src), path.basename(src) + ".sealed");
@@ -62,7 +38,15 @@ async function sealAndUnsealFile(src){
   console.time(tag)
   let sealedStream = new SealedFileStream(dst);
   let ret_ws = fs.createWriteStream(ret_src);
-  sealedStream.pipe(new Unsealer({keyPair: key_pair})).pipe(ret_ws);
+
+  let unsealer = new Unsealer({keyPair: key_pair});
+  sealedStream.pipe(unsealer).pipe(ret_ws);
+  sealedStream.on('error', (error)=>{
+    console.log("got error: ", error);
+  })
+  unsealer.on('error', (error)=>{
+    console.log("got error: ", error);
+  })
   await new Promise((resolve)=>{
     ret_ws.on('finish', ()=>{
       resolve();
@@ -89,23 +73,6 @@ test('test medium file', async()=>{
 })
 
 
-function generateFileWithSize(fp, size){
-  let b = Buffer.alloc(1024 * 64);
-  for(let i = 0; i < 1024 * 64; i++){
-    b[i] = i%256
-  }
-
-  for (let i = 0; i < size/(1024 * 64); i++) {
-    fs.writeFileSync(fp,
-      b,
-      {
-        flag: "a+",
-        mode: 0o666
-      });
-  }
-
-  log.info("done generate file")
-}
 
 test('test large file', async()=>{
   let src = "large.file";

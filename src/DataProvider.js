@@ -20,7 +20,9 @@ var log = require("loglevel").getLogger("meta-encryptor/dataprovider");
 const YPCCrypto = YPCCryptoFun();
 const YPCNtObject = YPCNtObjectFun();
 
-import {BlockNumLimit, MaxItemSize, HeaderSize, MagicNum} from "./limits.js";
+import {BlockNumLimit, MaxItemSize,
+  HeaderSize, MagicNum,
+  CurrentBlockFileVersion, BlockInfoSize} from "./limits.js";
 
 const BlockFile = BlockFileFun(
   MagicNum,
@@ -98,7 +100,7 @@ DataProvider.prototype.sealData = function(input,
 
 DataProvider.prototype.setHeaderAndMeta = function() {
   //let block_start_offset = 32 + 32 * BlockNumLimit;
-  let block_start_offset = 32 * this.header.block_number;
+  let block_start_offset = BlockInfoSize * this.header.block_number;
   let fileMeta = new ByteBuffer(block_start_offset, LITTLE_ENDIAN);
   let offset = 0;
   //set header
@@ -111,7 +113,7 @@ DataProvider.prototype.setHeaderAndMeta = function() {
     let bi = this.block_meta_info[i];
     let buf_bi = block_info_t2buffer(bi);
     fileMeta.append(buf_bi, offset);
-    offset += 32;
+    offset += BlockInfoSize;
   }
   let b_skey = Buffer.from(this.key_pair["private_key"], "hex");
   let hash_sig = YPCCrypto.signMessage(b_skey, Buffer.from(this.data_hash));
@@ -135,15 +137,15 @@ const headerAndBlockBufferFromBuffer = function(buf) {
   }
   const buffer = buf.subarray(buf.length - HeaderSize);
   const header = buffer2header_t(ByteBuffer.wrap(buffer, LITTLE_ENDIAN));
-  if (header.version_number != 2) {
-    throw new Error("only support version 2, yet got ", header.version_number);
+  if (header.version_number != CurrentBlockFileVersion) {
+    throw new Error("only support version ", CurrentBlockFileVersion, ", yet got ", header.version_number);
   }
 
-  if (buf.length <= HeaderSize + 32 * header.block_number) {
+  if (buf.length <= HeaderSize + BlockInfoSize * header.block_number) {
     return null;
   }
 
-  const blkBuffer = buf.subarray(buf.length - HeaderSize - 32 * header.block_number, buf.length - HeaderSize);
+  const blkBuffer = buf.subarray(buf.length - HeaderSize - BlockInfoSize * header.block_number, buf.length - HeaderSize);
 
   return {
     header: buffer,
