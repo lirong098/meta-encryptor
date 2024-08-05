@@ -21,6 +21,10 @@ import {
 
 var log = require("loglevel").getLogger("meta-encryptor/SealedFileStream");
 
+function supportsConstruct() {
+  return typeof Readable.prototype._construct === 'function';
+}
+
 export class SealedFileStream extends Readable{
   constructor(filePath, options){
     super(options);
@@ -30,7 +34,18 @@ export class SealedFileStream extends Readable{
     this.start = options ? options.start || 0 : 0;
     this.end = options ? options.end : undefined;
     this.startReadPos = 0;
+    this.initialized = false;
     log.debug("SealedFileStream: ", this)
+    if (!supportsConstruct()) {
+      this._construct((err) => {
+        if (err) {
+          this.emit("error", err);
+          return;
+        }
+        this.initialized = true;
+        this.emit('readable')
+      })
+    }
   }
 
   async _construct(callback) {
@@ -72,6 +87,10 @@ export class SealedFileStream extends Readable{
   }
 
   _read(size) {
+    log.debug("_read initialized:", this.initialized);
+    if (!this.initialized) {
+      return;
+    }
     if(!this.isHeaderSent){
       if(size < HeaderSize - this.startReadPos){
         this.push(this.header.slice(this.startReadPos, this.startReadPos + size));

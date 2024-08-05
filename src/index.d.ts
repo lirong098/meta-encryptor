@@ -11,6 +11,8 @@ declare const _default: {
   dataHashOfSealedFile: any;
   signedDataHash: any;
   forwardSkey: any;
+  Unsealer: any;
+  SealedFileStream: any;
 };
 export const downloadJson: typeof _default.downloadJson;
 export const DataProvider: typeof _default.dataProvider;
@@ -24,4 +26,6 @@ export const ToString: typeof _default.ToString;
 export const dataHashOfSealedFile: typeof _default.dataHashOfSealedFile;
 export const signedDataHash: typeof _default.signedDataHash;
 export const forwardSkey: typeof _default.forwardSkey;
+export const Unsealer: typeof _default.Unsealer;
+export const SealedFileStream: typeof _default.SealedFileStream;
 export default _default;
