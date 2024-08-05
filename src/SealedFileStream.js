@@ -18,11 +18,14 @@ import {
   fromNtInput,
   batch2ntpackage
 } from "./header_util.js"
+import { gte } from "semver";
+
 
 var log = require("loglevel").getLogger("meta-encryptor/SealedFileStream");
 
 function supportsConstruct() {
-  return typeof Readable.prototype._construct === 'function';
+  // Node.js 15.0.0 引入了 _construct 方法
+  return gte(process.version, '15.0.0');
 }
 
 export class SealedFileStream extends Readable{
@@ -37,14 +40,17 @@ export class SealedFileStream extends Readable{
     this.initialized = false;
     log.debug("SealedFileStream: ", this)
     if (!supportsConstruct()) {
+      log.debug("no support construct");
       this._construct((err) => {
         if (err) {
           this.emit("error", err);
           return;
         }
-        this.initialized = true;
         this.emit('readable')
+        this.emit('ready')
       })
+    } else {
+      log.debug("support construct");
     }
   }
 
@@ -79,6 +85,7 @@ export class SealedFileStream extends Readable{
           resolve();
         });
       }) ;
+      this.initialized = true;
       callback();
     } catch (err) {
       log.error("got err " + err)
@@ -89,6 +96,7 @@ export class SealedFileStream extends Readable{
   _read(size) {
     log.debug("_read initialized:", this.initialized);
     if (!this.initialized) {
+      this.once('ready', () => this._read(size));
       return;
     }
     if(!this.isHeaderSent){
