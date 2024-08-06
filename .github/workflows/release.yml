@@ -32,16 +32,16 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Bump version and create tag
+    - name: Bump version, commit and create tag
+      id: bump_version
       run: |
-        CURRENT_VERSION=$(jq -r '.version' package.json)
-        NEW_VERSION=$(npm version patch -m "Upgrade to version %s")
-        git tag -a "v${NEW_VERSION}" -m "Release version ${NEW_VERSION}"
-        git push origin --tags
+        NEW_VERSION=$(npm version patch -m "Upgrade to version %s" | sed 's/v//')
+        echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
+        git push origin HEAD:main --follow-tags
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     
     - name: Publish to npm
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      run: yarn publish --new-version $NEW_VERSION
+      run: npm publish --new-version $NEW_VERSION
