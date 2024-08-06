@@ -27,6 +27,11 @@ jobs:
     - name: Build project
       run: yarn build  # 假设你的项目有一个构建步骤
 
+    - name: Configure Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
     - name: Bump version and create tag
       run: |
         CURRENT_VERSION=$(jq -r '.version' package.json)
