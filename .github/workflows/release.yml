@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main  # 发布的目标分支
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '14'  # 你项目使用的 Node.js 版本
+
+    - name: Install Yarn
+      run: npm install -g yarn
+
+    - name: Install
+      run: yarn
+
+    - name: Build project
+      run: yarn build  # 假设你的项目有一个构建步骤
+
+    - name: Bump version and create tag
+      run: |
+        CURRENT_VERSION=$(jq -r '.version' package.json)
+        NEW_VERSION=$(npm version patch -m "Upgrade to version %s")
+        git tag -a "v${NEW_VERSION}" -m "Release version ${NEW_VERSION}"
+        git push origin --tags
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
+    - name: Publish to npm
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: npm publish --new-version $NEW_VERSION
