@@ -46,7 +46,6 @@ export class SealedFileStream extends Readable{
           this.emit("error", err);
           return;
         }
-        this.emit('readable')
         this.emit('ready')
       })
     } else {
